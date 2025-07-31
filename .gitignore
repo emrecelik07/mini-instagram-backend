@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+##########
+/src/main/resources/application.properties
+
+# .gitignore
+*.env
+*.secret

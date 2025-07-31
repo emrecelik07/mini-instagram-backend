@@ -6,15 +6,15 @@ spring.datasource.password=1234
 
 spring.jpa.hibernate.ddl-auto=update
 
-jwt.secret.key=${JWT_SECRET_KEY}
+jwt.secret.key=thisisthekeyIcreatedindevelopment
 
 server.servlet.context-path=/api/v1.0
 
 spring.mail.host=smtp-relay.brevo.com
 spring.mail.port=587
-spring.mail.username=923058001@smtp-brevo.com
-spring.mail.password=M93Pbzf4OtY5r01R
+spring.mail.username=--------------
+spring.mail.password=--------------
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 spring.mail.protocol=smtp
-spring.mail.properties.mail.smtp.from=emrcel07@gmail.com
+spring.mail.properties.mail.smtp.from=------------
