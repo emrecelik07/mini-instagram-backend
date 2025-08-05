@@ -11,6 +11,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.time.Duration;
+
 
 @Component
 public class JwtUtil {
@@ -18,9 +20,17 @@ public class JwtUtil {
     @Value("${jwt.secret.key}")
     private String SECRET_KEY;
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, Duration ttl) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+        long   now   = System.currentTimeMillis();
+        long   exp   = now + ttl.toMillis();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(exp))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
     }
 
     private String createToken(Map<String, Object> claims, String email) {

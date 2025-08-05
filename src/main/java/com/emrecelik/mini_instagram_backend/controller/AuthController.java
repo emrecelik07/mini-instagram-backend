@@ -35,6 +35,8 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final ProfileService profileService;
 
+
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
 
@@ -43,17 +45,23 @@ public class AuthController {
             final UserDetails userDetails = appUserDetailsService
                     .loadUserByUsername(authRequest.getEmail());
 
-            final String jwttoken = jwtUtil.generateToken(userDetails);
+            boolean remember = Boolean.TRUE.equals(authRequest.getRememberMe());
+            Duration ttl     = remember ? Duration.ofDays(7) : Duration.ofHours(1);
+            String jwttoken  = jwtUtil.generateToken(userDetails, ttl);
+
+//            final String jwttoken = jwtUtil.generateToken(userDetails);
 
             ResponseCookie responseCookie = ResponseCookie.from("jwt", jwttoken)
                     .httpOnly(true)
                     .path("/")
-                    .maxAge(Duration.ofDays(1))
+                    .secure(false)
                     .sameSite("Strict")
+                    .maxAge(remember ? Duration.ofDays(7) : Duration.ofHours(1))
                     .build();
 
             return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, responseCookie.toString())
-                    .body(new AuthResponse(authRequest.getEmail(), jwttoken));
+                    .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                    .body(Map.of("email", authRequest.getEmail()));
 
         } catch (BadCredentialsException e) {
             Map<String, Object> errors = new HashMap<>();
