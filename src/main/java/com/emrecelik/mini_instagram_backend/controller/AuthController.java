@@ -41,6 +41,9 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
 
         try {
+            boolean secure = false;
+            String sameSite = "Lax";
+
             authenticate(authRequest.getEmail(), authRequest.getPassword());
             final UserDetails userDetails = appUserDetailsService
                     .loadUserByUsername(authRequest.getEmail());
@@ -49,13 +52,11 @@ public class AuthController {
             Duration ttl     = remember ? Duration.ofDays(7) : Duration.ofHours(1);
             String jwttoken  = jwtUtil.generateToken(userDetails, ttl);
 
-//            final String jwttoken = jwtUtil.generateToken(userDetails);
-
             ResponseCookie responseCookie = ResponseCookie.from("jwt", jwttoken)
                     .httpOnly(true)
                     .path("/")
-                    .secure(false)
-                    .sameSite("Strict")
+                    .secure(secure)
+                    .sameSite(sameSite)
                     .maxAge(remember ? Duration.ofDays(7) : Duration.ofHours(1))
                     .build();
 

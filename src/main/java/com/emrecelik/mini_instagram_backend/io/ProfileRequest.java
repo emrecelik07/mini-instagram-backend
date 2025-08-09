@@ -13,9 +13,14 @@ import lombok.NoArgsConstructor;
 public class ProfileRequest {
     @NotBlank
     private String name;
+    @NotBlank
+    private String username;
     @NotNull
     @Email
     private String email;
-    @Min(6)
+    @Size(min = 6)
     private String password;
+
+    private String profileImageUrl;
+
 }

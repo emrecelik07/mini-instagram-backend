@@ -16,65 +16,43 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final AppUserDetailsService appUserDetailsService;
-
-    private static final List<String> PUBLIC_URLS = List.of(
-            "/login",
-            "/register",
-            "/send-reset-otp",
-            "/reset-password",
-            "/logout");
+    private final AppUserDetailsService userDetailsSvc;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String path =  request.getServletPath();
-
-        if(PUBLIC_URLS.contains(path)){
-            filterChain.doFilter(request, response);
-            return;
-        }
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
 
         String jwt = null;
-        String email = null;
 
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-        }
-
-        if (jwt == null) {
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("jwt")) {
-                        jwt = cookie.getValue();
-                        break;
-                    }
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if ("jwt".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
+                    jwt = c.getValue();
+                    break;
                 }
             }
         }
 
-        if (jwt != null) {
-            email = jwtUtil.extractEmail(jwt);
-            if(email != null && SecurityContextHolder.getContext().getAuthentication() == null){
-                UserDetails userDetails = appUserDetailsService.loadUserByUsername(email);
-                if (jwtUtil.validateToken(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String email = jwtUtil.extractEmail(jwt);
+            if (email != null) {
+                UserDetails user = userDetailsSvc.loadUserByUsername(email);
+                if (jwtUtil.validateToken(jwt, user)) {
+                    var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }
         }
 
-        filterChain.doFilter(request, response);
-
+        chain.doFilter(request, response);
     }
 }

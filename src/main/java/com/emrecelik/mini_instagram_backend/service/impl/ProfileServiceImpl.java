@@ -127,6 +127,7 @@ public class ProfileServiceImpl implements ProfileService {
     private ProfileResponse createToProfileResponse(UserModel newUser) {
         return ProfileResponse.builder()
                 .name(newUser.getName())
+                .username(newUser.getUsername())
                 .email(newUser.getEmail())
                 .userId(newUser.getUserId())
                 .userId(newUser.getUserId())
@@ -139,6 +140,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .email(request.getEmail())
                 .userId(UUID.randomUUID().toString())
                 .name(request.getName())
+                .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .isVerified(false)
                 .resetOtpExpireAt(0L)
