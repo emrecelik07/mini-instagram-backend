@@ -1,5 +1,6 @@
 package com.emrecelik.mini_instagram_backend.io;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,13 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProfileResponse {
-
-    private String userId;
+public class UpdateProfileRequest {
+    @NotBlank
     private String name;
+    @NotBlank
     private String username;
-    private String email;
-    private Boolean isVerified;
-    private String profileImageUrl;
     private String bio;
 }

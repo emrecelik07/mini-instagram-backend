@@ -2,6 +2,7 @@ package com.emrecelik.mini_instagram_backend.service.impl;
 
 import com.emrecelik.mini_instagram_backend.io.ProfileRequest;
 import com.emrecelik.mini_instagram_backend.io.ProfileResponse;
+import com.emrecelik.mini_instagram_backend.io.UpdateProfileRequest;
 import com.emrecelik.mini_instagram_backend.model.UserModel;
 import com.emrecelik.mini_instagram_backend.repo.UserRepository;
 import com.emrecelik.mini_instagram_backend.service.ProfileService;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -124,14 +126,43 @@ public class ProfileServiceImpl implements ProfileService {
         userRepository.save(existingUser);
     }
 
+    @Override
+    public List<ProfileResponse> searchUsers(String searchTerm) {
+        List<UserModel> users = userRepository.searchUsersByNameOrUsername(searchTerm);
+        return users.stream()
+                .map(this::createToProfileResponse)
+                .toList();
+    }
+
+    @Override
+    public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
+        UserModel existingUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        // Update only name and username if provided
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            existingUser.setName(request.getName().trim());
+        }
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            existingUser.setUsername(request.getUsername().trim());
+        }
+        if (request.getBio() != null) {
+            existingUser.setBio(request.getBio().trim());
+        }
+
+        existingUser = userRepository.save(existingUser);
+        return createToProfileResponse(existingUser);
+    }
+
     private ProfileResponse createToProfileResponse(UserModel newUser) {
         return ProfileResponse.builder()
                 .name(newUser.getName())
                 .username(newUser.getUsername())
                 .email(newUser.getEmail())
                 .userId(newUser.getUserId())
-                .userId(newUser.getUserId())
                 .isVerified(newUser.getIsVerified())
+                .profileImageUrl(newUser.getProfileImageUrl())
+                .bio(newUser.getBio())
                 .build();
     }
 

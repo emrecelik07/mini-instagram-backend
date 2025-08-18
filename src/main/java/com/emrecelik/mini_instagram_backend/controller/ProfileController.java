@@ -2,6 +2,7 @@ package com.emrecelik.mini_instagram_backend.controller;
 
 import com.emrecelik.mini_instagram_backend.io.ProfileRequest;
 import com.emrecelik.mini_instagram_backend.io.ProfileResponse;
+import com.emrecelik.mini_instagram_backend.io.UpdateProfileRequest;
 import com.emrecelik.mini_instagram_backend.service.impl.EmailService;
 import com.emrecelik.mini_instagram_backend.service.ProfileService;
 import jakarta.validation.Valid;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,6 +32,18 @@ public class ProfileController {
     public ProfileResponse getProfile(
             @CurrentSecurityContext(expression = "authentication?.name") String email) {
         return profileService.getProfile(email);
+    }
+
+    @GetMapping("/search")
+    public List<ProfileResponse> searchUsers(@RequestParam String q) {
+        return profileService.searchUsers(q);
+    }
+
+    @PutMapping("/profile")
+    public ProfileResponse updateProfile(
+            @CurrentSecurityContext(expression = "authentication?.name") String email,
+            @RequestBody UpdateProfileRequest request) {
+        return profileService.updateProfile(email, request);
     }
 
 }

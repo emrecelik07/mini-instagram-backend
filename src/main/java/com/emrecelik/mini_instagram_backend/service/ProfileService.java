@@ -2,7 +2,10 @@ package com.emrecelik.mini_instagram_backend.service;
 
 import com.emrecelik.mini_instagram_backend.io.ProfileRequest;
 import com.emrecelik.mini_instagram_backend.io.ProfileResponse;
+import com.emrecelik.mini_instagram_backend.io.UpdateProfileRequest;
 import org.springframework.context.annotation.Profile;
+
+import java.util.List;
 
 public interface ProfileService {
 
@@ -12,4 +15,6 @@ public interface ProfileService {
     void resetPassword(String email, String otp, String newPassword);
     void  sendOtp(String email);
     void verifyOtp(String email, String otp);
+    List<ProfileResponse> searchUsers(String searchTerm);
+    ProfileResponse updateProfile(String email, UpdateProfileRequest request);
 }

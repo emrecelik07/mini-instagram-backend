@@ -51,6 +51,6 @@ public class AvatarService {
             Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        return "/static/avatars/" + filename;
+        return "/api/v1.0/users/avatars/" + filename;
     }
 }

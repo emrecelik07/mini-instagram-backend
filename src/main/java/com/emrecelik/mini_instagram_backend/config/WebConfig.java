@@ -18,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path path = Paths.get(uploadDir).toAbsolutePath().normalize();
 
-        registry.addResourceHandler("/static/avatars/**")
+        registry.addResourceHandler("/users/avatars/**")
                 .addResourceLocations("file:" + path.toString() + "/")
                 .setCachePeriod(60 * 60 * 24 * 30); // 30 days
     }

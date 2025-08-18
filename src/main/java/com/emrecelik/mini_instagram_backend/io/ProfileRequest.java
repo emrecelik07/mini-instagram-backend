@@ -22,5 +22,6 @@ public class ProfileRequest {
     private String password;
 
     private String profileImageUrl;
+    private String bio;
 
 }

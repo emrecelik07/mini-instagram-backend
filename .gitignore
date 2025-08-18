@@ -35,6 +35,8 @@ build/
 ##########
 /src/main/resources/application.properties
 
+/uploads
+
 # .gitignore
 *.env
 *.secret
