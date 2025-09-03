@@ -6,6 +6,7 @@ import com.emrecelik.mini_instagram_backend.io.UpdateProfileRequest;
 import com.emrecelik.mini_instagram_backend.model.UserModel;
 import com.emrecelik.mini_instagram_backend.repo.UserRepository;
 import com.emrecelik.mini_instagram_backend.service.ProfileService;
+import com.emrecelik.mini_instagram_backend.util.IoUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,14 +25,15 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final IoUtil ioUtil;
 
     @Override
     public ProfileResponse createProfile(ProfileRequest profileRequest) {
-        UserModel newUser = convertUserToModel(profileRequest);
+        UserModel newUser = ioUtil.convertUserToModel(profileRequest);
 
         if (!userRepository.existsByEmail(newUser.getEmail())) {
             newUser = userRepository.save(newUser);
-            return createToProfileResponse(newUser);
+            return IoUtil.createToProfileResponse(newUser);
         }
 
         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
@@ -42,7 +44,7 @@ public class ProfileServiceImpl implements ProfileService {
         UserModel existingUser = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found" + email));
 
-        return createToProfileResponse(existingUser);
+        return IoUtil.createToProfileResponse(existingUser);
 
     }
 
@@ -130,7 +132,7 @@ public class ProfileServiceImpl implements ProfileService {
     public List<ProfileResponse> searchUsers(String searchTerm) {
         List<UserModel> users = userRepository.searchUsersByNameOrUsername(searchTerm);
         return users.stream()
-                .map(this::createToProfileResponse)
+                .map(IoUtil::createToProfileResponse)
                 .toList();
     }
 
@@ -151,35 +153,10 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         existingUser = userRepository.save(existingUser);
-        return createToProfileResponse(existingUser);
+        return IoUtil.createToProfileResponse(existingUser);
     }
 
-    private ProfileResponse createToProfileResponse(UserModel newUser) {
-        return ProfileResponse.builder()
-                .name(newUser.getName())
-                .username(newUser.getUsername())
-                .email(newUser.getEmail())
-                .userId(newUser.getUserId())
-                .isVerified(newUser.getIsVerified())
-                .profileImageUrl(newUser.getProfileImageUrl())
-                .bio(newUser.getBio())
-                .build();
-    }
 
-    private UserModel convertUserToModel(ProfileRequest request) {
-        return UserModel.builder()
-                .email(request.getEmail())
-                .userId(UUID.randomUUID().toString())
-                .name(request.getName())
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .isVerified(false)
-                .resetOtpExpireAt(0L)
-                .verifyOtp(null)
-                .verifyOtpExpireAt(0L)
-                .resetOtp(null)
-                .build();
-    }
 
 
 }

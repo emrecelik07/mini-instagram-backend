@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,6 +53,22 @@ public class AvatarController {
                 .profileImageUrl(user.getProfileImageUrl())
                 .bio(user.getBio())
                 .build();
+    }
+
+    @PostMapping(value = "/avatar/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> uploadImageForPost(@RequestParam("file") MultipartFile file, Authentication auth) throws Exception {
+        String principal = auth.getName();
+
+        UserModel user = userRepository.findByUsername(principal)
+                .orElseGet(() -> userRepository.findByEmail(principal)
+                        .orElseThrow(() -> new RuntimeException("User not found: " + principal)));
+
+        String url = avatarService.saveAvatar(file, user.getId());
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("imageUrl", url);
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/avatars/{filename:.+}")

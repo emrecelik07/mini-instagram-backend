@@ -17,6 +17,12 @@ public interface UserRepository extends JpaRepository<UserModel, Long> {
 
     Optional<UserModel> findByUsername(String principal);
 
-    @Query("SELECT u FROM UserModel u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    @Query("""
+        SELECT u FROM UserModel u 
+        WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) 
+        OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+    """)
     List<UserModel> searchUsersByNameOrUsername(@Param("searchTerm") String searchTerm);
+    
+    Optional<UserModel> findByUserId(String userId);
 }
