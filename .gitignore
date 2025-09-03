@@ -32,11 +32,22 @@ build/
 ### VS Code ###
 .vscode/
 
-##########
+### Environment and Configuration ###
 /src/main/resources/application.properties
-
-/uploads
-
-# .gitignore
+/src/main/resources/application-dev.properties
+/src/main/resources/application-prod.properties
 *.env
 *.secret
+.env
+.env.local
+.env.development
+.env.production
+
+### Uploads and Generated Files ###
+/uploads
+/logs
+*.log
+
+### OS Generated Files ###
+.DS_Store
+Thumbs.db
