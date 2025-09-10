@@ -5,11 +5,11 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.emrecelik.mini_instagram_backend.model.CommentModel;
-import com.emrecelik.mini_instagram_backend.model.PostModel;
 
 @Repository
 public interface CommentRepository extends JpaRepository<CommentModel, Long> {
@@ -26,5 +26,9 @@ public interface CommentRepository extends JpaRepository<CommentModel, Long> {
     List<CommentModel> findByUserId(@Param("userId") String userId);
     
     boolean existsByCommentId(String commentId);
+
+    @Modifying
+    @Query("DELETE FROM CommentModel c WHERE c.post.postId = :postId")
+    void deleteAllByPostId(@Param("postId") String postId);
 }
 

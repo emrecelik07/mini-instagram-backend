@@ -5,6 +5,7 @@ import com.emrecelik.mini_instagram_backend.io.ProfileResponse;
 import com.emrecelik.mini_instagram_backend.io.UpdateProfileRequest;
 import com.emrecelik.mini_instagram_backend.model.UserModel;
 import com.emrecelik.mini_instagram_backend.repo.UserRepository;
+import com.emrecelik.mini_instagram_backend.repo.FollowRepository;
 import com.emrecelik.mini_instagram_backend.service.ProfileService;
 import com.emrecelik.mini_instagram_backend.util.IoUtil;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -26,6 +26,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final IoUtil ioUtil;
+    private final FollowRepository followRepository;
 
     @Override
     public ProfileResponse createProfile(ProfileRequest profileRequest) {
@@ -44,7 +45,10 @@ public class ProfileServiceImpl implements ProfileService {
         UserModel existingUser = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found" + email));
 
-        return IoUtil.createToProfileResponse(existingUser);
+        ProfileResponse base = IoUtil.createToProfileResponse(existingUser);
+        Long followersCount = followRepository.countFollowersByUserId(existingUser.getUserId());
+        Long followingCount = followRepository.countFollowingByUserId(existingUser.getUserId());
+        return IoUtil.attachFollowCounts(base, followersCount, followingCount);
 
     }
 
@@ -132,7 +136,12 @@ public class ProfileServiceImpl implements ProfileService {
     public List<ProfileResponse> searchUsers(String searchTerm) {
         List<UserModel> users = userRepository.searchUsersByNameOrUsername(searchTerm);
         return users.stream()
-                .map(IoUtil::createToProfileResponse)
+                .map(u -> {
+                    ProfileResponse base = IoUtil.createToProfileResponse(u);
+                    Long followersCount = followRepository.countFollowersByUserId(u.getUserId());
+                    Long followingCount = followRepository.countFollowingByUserId(u.getUserId());
+                    return IoUtil.attachFollowCounts(base, followersCount, followingCount);
+                })
                 .toList();
     }
 
@@ -153,7 +162,10 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         existingUser = userRepository.save(existingUser);
-        return IoUtil.createToProfileResponse(existingUser);
+        ProfileResponse base = IoUtil.createToProfileResponse(existingUser);
+        Long followersCount = followRepository.countFollowersByUserId(existingUser.getUserId());
+        Long followingCount = followRepository.countFollowingByUserId(existingUser.getUserId());
+        return IoUtil.attachFollowCounts(base, followersCount, followingCount);
     }
 
 

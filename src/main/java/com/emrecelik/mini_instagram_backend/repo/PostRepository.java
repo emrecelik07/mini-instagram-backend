@@ -24,9 +24,9 @@ public interface PostRepository extends JpaRepository<PostModel, Long> {
     
     boolean existsByPostId(String postId);
     
-    // Get feed posts from users that the current user follows
-    @Query("SELECT p FROM PostModel p WHERE p.user IN " +
-            "(SELECT f.following FROM FollowModel f WHERE f.follower.userId = :userId) " +
-            "AND p.isPrivate = false ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM PostModel p WHERE (" +
+            "(p.user IN (SELECT f.following FROM FollowModel f WHERE f.follower.userId = :userId) AND p.isPrivate = false) " +
+            "OR p.user.userId = :userId) " +
+            "ORDER BY p.createdAt DESC")
     List<PostModel> getFeedPosts(@Param("userId") String userId);
 }

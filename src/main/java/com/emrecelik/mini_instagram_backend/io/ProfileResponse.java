@@ -18,4 +18,6 @@ public class ProfileResponse {
     private Boolean isVerified;
     private String profileImageUrl;
     private String bio;
+    private Long followersCount;
+    private Long followingCount;
 }

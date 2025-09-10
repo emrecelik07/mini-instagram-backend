@@ -53,4 +53,18 @@ public class AvatarService {
 
         return "/api/v1.0/users/avatars/" + filename;
     }
+
+    public void deleteAvatarIfExists(String avatarUrl) {
+        try {
+            if (avatarUrl == null || avatarUrl.isBlank()) return;
+            int lastSlash = avatarUrl.lastIndexOf('/') + 1;
+            if (lastSlash <= 0 || lastSlash >= avatarUrl.length()) return;
+            String filename = avatarUrl.substring(lastSlash);
+            Path dir = Path.of(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(dir);
+            Path target = dir.resolve(filename);
+            Files.deleteIfExists(target);
+        } catch (Exception ignored) {
+        }
+    }
 }

@@ -16,7 +16,6 @@ import com.emrecelik.mini_instagram_backend.model.UserModel;
 import com.emrecelik.mini_instagram_backend.model.PostModel;
 import com.emrecelik.mini_instagram_backend.model.CommentModel;
 import com.emrecelik.mini_instagram_backend.repo.UserRepository;
-import com.emrecelik.mini_instagram_backend.repo.FollowRepository;
 import com.emrecelik.mini_instagram_backend.repo.LikeRepository;
 import com.emrecelik.mini_instagram_backend.repo.SaveRepository;
 import com.emrecelik.mini_instagram_backend.repo.CommentRepository;
@@ -39,6 +38,12 @@ public class IoUtil {
                 .profileImageUrl(newUser.getProfileImageUrl())
                 .bio(newUser.getBio())
                 .build();
+    }
+
+    public static ProfileResponse attachFollowCounts(ProfileResponse base, Long followersCount, Long followingCount) {
+        base.setFollowersCount(followersCount);
+        base.setFollowingCount(followingCount);
+        return base;
     }
 
     public UserModel convertUserToModel(ProfileRequest request) {

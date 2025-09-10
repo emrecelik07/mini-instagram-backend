@@ -100,6 +100,32 @@ public class AvatarController {
         }
     }
 
+    @DeleteMapping("/me/avatar")
+    public ProfileResponse removeAvatar(Authentication auth) {
+        String principal = auth.getName();
+
+        UserModel user = userRepository.findByUsername(principal)
+                .orElseGet(() -> userRepository.findByEmail(principal)
+                        .orElseThrow(() -> new RuntimeException("User not found: " + principal)));
+
+        avatarService.deleteAvatarIfExists(user.getProfileImageUrl());
+        user.setProfileImageUrl(null);
+        user.setProfileImageContentType(null);
+        user.setProfileImageWidth(null);
+        user.setProfileImageHeight(null);
+        userRepository.save(user);
+
+        return ProfileResponse.builder()
+                .userId(user.getUserId())
+                .name(user.getName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .isVerified(user.getIsVerified())
+                .profileImageUrl(null)
+                .bio(user.getBio())
+                .build();
+    }
+
     private String determineContentType(String filename) {
         if (filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg")) {
             return "image/jpeg";

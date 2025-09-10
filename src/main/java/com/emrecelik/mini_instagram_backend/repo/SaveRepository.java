@@ -32,5 +32,9 @@ public interface SaveRepository extends JpaRepository<SaveModel, Long> {
     @Modifying
     @Query("DELETE FROM SaveModel s WHERE s.user.userId = :userId AND s.post.postId = :postId")
     void deleteByUserIdAndPostId(@Param("userId") String userId, @Param("postId") String postId);
+
+    @Modifying
+    @Query("DELETE FROM SaveModel s WHERE s.post.postId = :postId")
+    void deleteAllByPostId(@Param("postId") String postId);
 }
 

@@ -148,6 +148,7 @@ public class PostServiceImpl implements PostService {
     }
     
     @Override
+    @Transactional
     public void deletePost(String postId, String userId) {
         PostModel post = postRepository.findByPostId(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -155,7 +156,11 @@ public class PostServiceImpl implements PostService {
         if (!post.getUser().getUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized to delete this post");
         }
-        
+        // Delete child records first to satisfy FK constraints
+        likeRepository.deleteAllByPostId(postId);
+        saveRepository.deleteAllByPostId(postId);
+        commentRepository.deleteAllByPostId(postId);
+
         postRepository.delete(post);
     }
     
