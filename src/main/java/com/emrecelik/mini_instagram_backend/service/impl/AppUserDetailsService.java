@@ -21,6 +21,16 @@ public class AppUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         UserModel existingUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(email));
+
+        if (existingUser.getIsVerified() == null || !existingUser.getIsVerified()) {
+            // Represent unverified users as disabled so Spring can handle with DisabledException
+            return User.withUsername(existingUser.getEmail())
+                    .password(existingUser.getPassword())
+                    .disabled(true)
+                    .authorities(new ArrayList<>())
+                    .build();
+        }
+
         return new User(existingUser.getEmail(), existingUser.getPassword(), new ArrayList<>());
     }
 }

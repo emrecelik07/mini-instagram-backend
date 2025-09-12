@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -39,5 +40,13 @@ public interface FollowRepository extends JpaRepository<FollowModel, Long> {
     
     // Check if user A follows user B
     boolean existsByFollowerUserIdAndFollowingUserId(String followerId, String followingId);
+
+    @Modifying
+    @Query("DELETE FROM FollowModel f WHERE f.follower.userId = :userId")
+    void deleteAllByFollowerId(@Param("userId") String userId);
+
+    @Modifying
+    @Query("DELETE FROM FollowModel f WHERE f.following.userId = :userId")
+    void deleteAllByFollowingId(@Param("userId") String userId);
 }
 

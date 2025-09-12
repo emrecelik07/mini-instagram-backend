@@ -29,30 +29,48 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
 
-        String jwt = null;
+        // Best-effort JWT parsing; never block public endpoints or login due to a bad cookie
+        try {
+            String jwt = null;
 
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie c : cookies) {
-                if ("jwt".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
-                    jwt = c.getValue();
-                    break;
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie c : cookies) {
+                    if ("jwt".equals(c.getName()) && c.getValue() != null && !c.getValue().isBlank()) {
+                        jwt = c.getValue();
+                        break;
+                    }
                 }
             }
-        }
 
-        if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            String email = jwtUtil.extractEmail(jwt);
-            if (email != null) {
-                UserDetails user = userDetailsSvc.loadUserByUsername(email);
-                if (jwtUtil.validateToken(jwt, user)) {
-                    var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+            if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                String email = jwtUtil.extractEmail(jwt);
+                if (email != null) {
+                    UserDetails user = userDetailsSvc.loadUserByUsername(email);
+                    if (jwtUtil.validateToken(jwt, user)) {
+                        var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 }
             }
+        } catch (Exception ignored) {
         }
 
         chain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        // tolerate context path prefixes, match by suffix
+        return path.endsWith("/login")
+                || path.endsWith("/register")
+                || path.endsWith("/send-reset-otp")
+                || path.endsWith("/reset-password")
+                || path.endsWith("/send-otp-public")
+                || path.endsWith("/verify-otp-public")
+                || path.endsWith("/logout")
+                || path.contains("/uploads/");
     }
 }

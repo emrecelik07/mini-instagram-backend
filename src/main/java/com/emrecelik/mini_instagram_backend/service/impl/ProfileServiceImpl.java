@@ -6,6 +6,10 @@ import com.emrecelik.mini_instagram_backend.io.UpdateProfileRequest;
 import com.emrecelik.mini_instagram_backend.model.UserModel;
 import com.emrecelik.mini_instagram_backend.repo.UserRepository;
 import com.emrecelik.mini_instagram_backend.repo.FollowRepository;
+import com.emrecelik.mini_instagram_backend.repo.PostRepository;
+import com.emrecelik.mini_instagram_backend.repo.LikeRepository;
+import com.emrecelik.mini_instagram_backend.repo.SaveRepository;
+import com.emrecelik.mini_instagram_backend.repo.CommentRepository;
 import com.emrecelik.mini_instagram_backend.service.ProfileService;
 import com.emrecelik.mini_instagram_backend.util.IoUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -27,6 +32,10 @@ public class ProfileServiceImpl implements ProfileService {
     private final EmailService emailService;
     private final IoUtil ioUtil;
     private final FollowRepository followRepository;
+    private final PostRepository postRepository;
+    private final LikeRepository likeRepository;
+    private final SaveRepository saveRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public ProfileResponse createProfile(ProfileRequest profileRequest) {
@@ -88,6 +97,17 @@ public class ProfileServiceImpl implements ProfileService {
         existingUser.setResetOtp(null);
         existingUser.setResetOtpExpireAt(0L);
 
+        userRepository.save(existingUser);
+    }
+
+    @Override
+    public void changePassword(String email, String currentPassword, String newPassword) {
+        UserModel existingUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found" + email));
+        if (!passwordEncoder.matches(currentPassword, existingUser.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong current password");
+        }
+        existingUser.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(existingUser);
     }
 
@@ -168,7 +188,34 @@ public class ProfileServiceImpl implements ProfileService {
         return IoUtil.attachFollowCounts(base, followersCount, followingCount);
     }
 
+    @Override
+    @Transactional
+    public void deleteCurrentUser(String email) {
+        UserModel existingUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
+        String userId = existingUser.getUserId();
 
+        // Remove follow relationships (as follower and as following)
+        followRepository.deleteAllByFollowerId(userId);
+        followRepository.deleteAllByFollowingId(userId);
 
+        // Remove likes/saves/comments authored by the user
+        likeRepository.deleteAllByUserId(userId);
+        saveRepository.deleteAllByUserId(userId);
+        commentRepository.deleteAllByUserId(userId);
+
+        // Remove posts authored by the user and their child rows
+        var posts = postRepository.findByUser_UserId(userId);
+        for (var p : posts) {
+            String postId = p.getPostId();
+            likeRepository.deleteAllByPostId(postId);
+            saveRepository.deleteAllByPostId(postId);
+            commentRepository.deleteAllByPostId(postId);
+        }
+        postRepository.deleteAll(posts);
+
+        // Finally delete the user
+        userRepository.delete(existingUser);
+    }
 }

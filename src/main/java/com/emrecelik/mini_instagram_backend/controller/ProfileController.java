@@ -46,4 +46,11 @@ public class ProfileController {
         return profileService.updateProfile(email, request);
     }
 
+    @DeleteMapping("/profile")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCurrentUser(
+            @CurrentSecurityContext(expression = "authentication?.name") String email) {
+        profileService.deleteCurrentUser(email);
+    }
+
 }
